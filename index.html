@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel BI — Gestão do Clube</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1320;
+            color: #ffffff;
+        }
+
+        .card-dark {
+            background-color: #111c2e;
+            border: 1px solid #1e2d42;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover-emerald:hover {
+            border-color: #10b981;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 18px rgba(16, 185, 129, 0.35);
+        }
+
+        .card-hover-amber:hover {
+            border-color: #f59e0b;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 18px rgba(245, 158, 11, 0.35);
+        }
+
+        .card-hover-rose:hover {
+            border-color: #f43f5e;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 18px rgba(244, 63, 94, 0.35);
+        }
+
+        .card-hover-sky:hover {
+            border-color: #38bdf8;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 18px rgba(56, 189, 248, 0.35);
+        }
+
+        .btn-card-action {
+            border: 1px solid #38bdf8;
+            background-color: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-card-action:hover {
+            background-color: #0284c7;
+            color: #ffffff;
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+        }
+
+        .nav-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-btn.active {
+            background-color: #0284c7;
+            color: #ffffff;
+            border-color: #38bdf8;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+            font-weight: 700;
+        }
+        .nav-btn.inactive {
+            background-color: rgba(30, 41, 59, 0.6);
+            color: #ffffff;
+            border-color: #334155;
+        }
+        .nav-btn.inactive:hover {
+            background-color: #334155;
+            border-color: #38bdf8;
+        }
+
+        /* Sub-botões da tabela financeira */
+        .sub-tab-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .sub-tab-btn.active {
+            background-color: #38bdf8;
+            color: #0b1320;
+            font-weight: 700;
+        }
+        .sub-tab-btn.inactive {
+            background-color: #1e2d42;
+            color: #94a3b8;
+        }
+        .sub-tab-btn.inactive:hover {
+            background-color: #334155;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 sm:p-8 w-full">
+
+    <!-- HEADER + NAVEGAÇÃO SUPERIOR -->
+    <header class="max-w-6xl w-full mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+                <i class="fa-solid fa-chart-line text-sky-400"></i> Painel do Clube
+            </h1>
+        </div>
+        
+        <nav class="flex items-center gap-2">
+            <button id="btn-geral" onclick="switchTab('geral')" class="nav-btn active px-5 py-2.5 text-xs rounded-lg border">
+                Geral
+            </button>
+            <button id="btn-financeiro" onclick="switchTab('financeiro')" class="nav-btn inactive px-5 py-2.5 text-xs rounded-lg border">
+                Financeiro
+            </button>
+            <button id="btn-ocupacao" onclick="switchTab('ocupacao')" class="nav-btn inactive px-5 py-2.5 text-xs rounded-lg border">
+                Ocupação
+            </button>
+            <button id="btn-socios" onclick="switchTab('socios', 'todos')" class="nav-btn inactive px-5 py-2.5 text-xs rounded-lg border">
+                Gestão de Sócios
+            </button>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-6xl w-full mx-auto space-y-6 flex-1">
+
+        <!-- ================= PÁGINA 1: GERAL ================= -->
+        <div id="page-geral" class="space-y-6">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-xl font-bold text-white">Visão Geral — Setembro/2026</h2>
+            </div>
+
+            <!-- Cards Principais -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="card-dark card-hover-emerald p-5 rounded-xl border-l-4 border-l-emerald-500 space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-white">Receita Realizada (Mês)</span>
+                    <div class="text-2xl font-extrabold text-emerald-400">R$ 142.850,00</div>
+                    <p class="text-xs text-white">Valores pagos em Setembro</p>
+                </div>
+
+                <div class="card-dark card-hover-amber p-5 rounded-xl border-l-4 border-l-amber-500 space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-white">Receita a Receber (Mês)</span>
+                    <div class="text-2xl font-extrabold text-amber-400">R$ 38.400,00</div>
+                    <p class="text-xs text-white">A vencer até 30/Setembro</p>
+                </div>
+
+                <div class="card-dark card-hover-rose p-5 rounded-xl border-l-4 border-l-rose-500 space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-white">Inadimplência do Mês</span>
+                    <div class="text-2xl font-extrabold text-rose-400">R$ 5.400,00</div>
+                    <p class="text-xs text-white"><strong class="text-rose-400">12</strong> sócios em atraso em Setembro</p>
+                </div>
+            </section>
+
+            <!-- Cards Secundários com Botão "Verificar >>" -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div class="card-dark card-hover-sky p-5 rounded-xl border-l-4 border-l-sky-500 flex flex-col justify-between space-y-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-white">Sócios Ativos</span>
+                        <div class="text-2xl font-extrabold text-white">1.240</div>
+                        <p class="text-xs text-white">Base regular do clube</p>
+                    </div>
+                    <div>
+                        <button onclick="switchTab('socios', 'Ativo')" class="btn-card-action w-full py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-between">
+                            <span>Verificar</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-dark card-hover-emerald p-5 rounded-xl border-l-4 border-l-emerald-500 flex flex-col justify-between space-y-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-white">Novos Sócios (Mês)</span>
+                        <div class="text-2xl font-extrabold text-emerald-400">+8</div>
+                        <p class="text-xs text-white">Novas adesões em Setembro</p>
+                    </div>
+                    <div>
+                        <button onclick="switchTab('socios', 'Novo')" class="btn-card-action w-full py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-between">
+                            <span>Verificar</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-dark card-hover-rose p-5 rounded-xl border-l-4 border-l-rose-500 flex flex-col justify-between space-y-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-white">Cancelamentos (Mês)</span>
+                        <div class="text-2xl font-extrabold text-rose-400">-3</div>
+                        <p class="text-xs text-white">Saídas em Setembro</p>
+                    </div>
+                    <div>
+                        <button onclick="switchTab('socios', 'Cancelado')" class="btn-card-action w-full py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-between">
+                            <span>Verificar</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-dark card-hover-amber p-5 rounded-xl border-l-4 border-l-amber-500 flex flex-col justify-between space-y-3">
+                    <div class="space-y-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-white">Taxa Inadimplência (Mês)</span>
+                        <div class="text-2xl font-extrabold text-amber-400">0,96%</div>
+                        <p class="text-xs text-white">Relativo ao mês vigente</p>
+                    </div>
+                    <div>
+                        <button onclick="switchTab('financeiro', 'atraso')" class="btn-card-action w-full py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-between">
+                            <span>Verificar</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Gráfico + Lista Rápida -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="card-dark p-6 rounded-xl lg:col-span-2 space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-sky-400"></i> Evolução da Receita (Últimos 6 Meses)
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="chartEvolucaoReceita"></canvas>
+                    </div>
+                </div>
+
+                <div class="card-dark p-6 rounded-xl space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-sky-400"></i> Próximos Eventos
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-white">Torneio Aberto de Tênis</p>
+                                <p class="text-xs text-sky-400">Quadra Central</p>
+                            </div>
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-slate-800 text-white border border-slate-700">18/SET</span>
+                        </div>
+
+                        <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-white">Baile da Primavera</p>
+                                <p class="text-xs text-sky-400">Salão Social</p>
+                            </div>
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-slate-800 text-white border border-slate-700">22/SET</span>
+                        </div>
+
+                        <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-white">Festival Infantil de Natação</p>
+                                <p class="text-xs text-sky-400">Parque Aquático</p>
+                            </div>
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded bg-slate-800 text-white border border-slate-700">27/SET</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= PÁGINA 2: FINANCEIRO ================= -->
+        <!-- ================= PÁGINA 2: FINANCEIRO ================= -->
+<div id="page-financeiro" class="space-y-6 hidden">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h2 class="text-xl font-bold text-white">Financeiro — Setembro/2026</h2>
+    </div>
+
+    <!-- Cards Principais -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card-dark card-hover-emerald p-5 rounded-xl border-l-4 border-l-emerald-500 space-y-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Receita Realizada (Mês)</span>
+            <div class="text-2xl font-extrabold text-emerald-400">R$ 142.850,00</div>
+            <p class="text-xs text-white">Confirmado no caixa em Setembro</p>
+        </div>
+
+        <div class="card-dark card-hover-amber p-5 rounded-xl border-l-4 border-l-amber-500 space-y-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Receita a Receber (Mês)</span>
+            <div class="text-2xl font-extrabold text-amber-400">R$ 38.400,00</div>
+            <p class="text-xs text-white">A vencer até final do mês</p>
+        </div>
+
+        <div class="card-dark card-hover-rose p-5 rounded-xl border-l-4 border-l-rose-500 space-y-1">
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Inadimplência de Setembro</span>
+            <div class="text-2xl font-extrabold text-rose-400">R$ 5.400,00</div>
+            <p class="text-xs text-white">12 mensalidades em atraso no mês</p>
+        </div>
+    </section>
+
+    <!-- Layout Dividido: Tabela Fixa à Esquerda | Gráfico + Card de Destaque à Direita -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        <!-- COLUNA ESQUERDA: CARD COM TABELA DE ALTURA FIXA -->
+        <div class="card-dark p-6 rounded-xl lg:col-span-2 space-y-4 flex flex-col justify-between">
+            <div>
+                <!-- Sub-abas da Tabela -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-sky-400"></i> Lançamentos do Mês
+                    </h3>
+                    
+                    <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                        <button id="subtab-pago" onclick="switchFinSubTab('pago')" class="sub-tab-btn active px-3 py-1 text-xs rounded-md">
+                            Pago (142.850,00)
+                        </button>
+                        <button id="subtab-receber" onclick="switchFinSubTab('receber')" class="sub-tab-btn inactive px-3 py-1 text-xs rounded-md">
+                            A Receber (38.400,00)
+                        </button>
+                        <button id="subtab-atraso" onclick="switchFinSubTab('atraso')" class="sub-tab-btn inactive px-3 py-1 text-xs rounded-md">
+                            Em Atraso (5.400,00)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Container da Tabela com Altura Mínima Fixa (Impede o card de encolher/esticar) -->
+                <div class="overflow-x-auto min-h-[290px]">
+                    <table class="w-full text-left text-xs text-white border-collapse border border-slate-800 divide-y divide-slate-800">
+                        <thead class="bg-slate-900 uppercase text-3xs font-semibold text-sky-400">
+                            <tr id="fin-table-head" class="divide-x divide-slate-800">
+                                <!-- Preenchido via JS -->
+                            </tr>
+                        </thead>
+                        <tbody id="fin-table-body" class="divide-y divide-slate-800">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Rodapé e Paginação -->
+            <div id="fin-pagination" class="flex justify-between items-center pt-3 border-t border-slate-800 text-xs mt-auto">
+                <span id="fin-page-info" class="text-slate-400">Página 1 de 1</span>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1.5 rounded bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed font-bold" disabled>&lt; Anterior</button>
+                    <button id="fin-btn-next" class="px-3 py-1.5 rounded bg-slate-800 text-sky-400 border border-slate-700 font-bold hover:bg-slate-700 transition" onclick="alert('Página demonstrativa.')">Próximo &gt;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUNA DIREITA: DOIS CARDS EMPILHADOS -->
+        <div class="space-y-6">
+            
+            <!-- Card 1: Gráfico Mais Curto -->
+            <div class="card-dark p-5 rounded-xl space-y-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-emerald-400"></i> Receita por Pagamento
+                </h3>
+                <div class="h-44">
+                    <canvas id="chartFormaPagamento"></canvas>
+                </div>
+            </div>
+
+            <!-- Card 2: Destaque de Texto em Baixo -->
+            <div class="card-dark p-5 rounded-xl border-l-4 border-l-emerald-500 bg-slate-900/50 flex items-center gap-4">
+                <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-400">
+                    <i class="fa-solid fa-arrow-trend-up text-xl"></i>
+                </div>
+                <div class="space-y-0.5">
+                    <div class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-up"></i> Aumento de 15%
+                    </div>
+                    <p class="text-xs text-white">Crescimento nos pagamentos via <strong>Pix</strong> no mês de Setembro.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+</div>
+
+        <!-- ================= PÁGINA 3: OCUPAÇÃO ================= -->
+        <div id="page-ocupacao" class="space-y-6 hidden">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-xl font-bold text-white">Ocupação — Setembro/2026</h2>
+            </div>
+
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="card-dark card-hover-sky p-5 rounded-xl border-l-4 border-l-sky-500 space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-white">Ocupação Salão de Festas</span>
+                    <div class="text-2xl font-extrabold text-sky-400">78%</div>
+                    <p class="text-xs text-white">Finais de semana lotados</p>
+                </div>
+
+                <div class="card-dark card-hover-sky p-5 rounded-xl border-l-4 border-l-sky-500 space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-white">Ocupação das Quadras</span>
+                    <div class="text-2xl font-extrabold text-sky-400">62%</div>
+                    <p class="text-xs text-white">Média diária de uso</p>
+                </div>
+
+                <div class="card-dark card-hover-emerald p-5 rounded-xl border-l-4 border-l-emerald-500 space-y-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-white">Total de Reservas (Mês)</span>
+                    <div class="text-2xl font-extrabold text-emerald-400">148</div>
+                    <p class="text-xs text-white">Agendamentos em Setembro</p>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="card-dark p-6 rounded-xl space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-bar text-sky-400"></i> Reservas por Espaço
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="chartReservasEspaco"></canvas>
+                    </div>
+                </div>
+
+                <div class="card-dark p-6 rounded-xl lg:col-span-2 space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check text-sky-400"></i> Agenda do Mês
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-white border-collapse border border-slate-800 divide-y divide-slate-800">
+                            <thead class="bg-slate-900 uppercase text-3xs font-semibold text-sky-400">
+                                <tr class="divide-x divide-slate-800">
+                                    <th class="py-3 px-3">Data</th>
+                                    <th class="py-3 px-3">Espaço</th>
+                                    <th class="py-3 px-3">Horário</th>
+                                    <th class="py-3 px-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800">
+                                <tr class="hover:bg-slate-800/50 divide-x divide-slate-800">
+                                    <td class="py-3 px-3 text-white font-mono">16/09/2026</td>
+                                    <td class="py-3 px-3 font-semibold text-white">Quadra 1 (Saibro)</td>
+                                    <td class="py-3 px-3 text-white">18:00 - 20:00</td>
+                                    <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">Confirmado</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 divide-x divide-slate-800">
+                                    <td class="py-3 px-3 text-white font-mono">18/09/2026</td>
+                                    <td class="py-3 px-3 font-semibold text-white">Salão de Festas Principal</td>
+                                    <td class="py-3 px-3 text-white">19:00 - 02:00</td>
+                                    <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">Confirmado</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 divide-x divide-slate-800">
+                                    <td class="py-3 px-3 text-white font-mono">20/09/2026</td>
+                                    <td class="py-3 px-3 font-semibold text-white">Área da Piscina</td>
+                                    <td class="py-3 px-3 text-white">10:00 - 17:00</td>
+                                    <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40">Pendente</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 divide-x divide-slate-800">
+                                    <td class="py-3 px-3 text-white font-mono">22/09/2026</td>
+                                    <td class="py-3 px-3 font-semibold text-white">Quadra 2 (Rápida)</td>
+                                    <td class="py-3 px-3 text-white">08:00 - 10:00</td>
+                                    <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">Confirmado</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= PÁGINA 4: GESTÃO DE SÓCIOS ================= -->
+        <div id="page-socios" class="space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-3 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Gestão e Cadastro de Sócios</h2>
+                    <p id="socios-subtitle-desc" class="text-xs text-sky-400 font-semibold">Exibindo panorama geral</p>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="search-nome" oninput="applyFilters()" placeholder="Buscar sócio por nome..." class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg pl-8 pr-3 py-2 focus:outline-none focus:border-sky-400 w-48 sm:w-56" />
+                    </div>
+
+                    <select id="filter-status" onchange="applyFilters()" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-sky-400">
+                        <option value="todos">Todos os Status</option>
+                        <option value="Ativo">Apenas Ativos</option>
+                        <option value="Novo">Apenas Novos (Setembro)</option>
+                        <option value="Cancelado">Apenas Cancelados</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card-dark p-6 rounded-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users text-sky-400"></i> Listagem de Sócios
+                    </h3>
+                    <p id="socios-count-label" class="text-xs text-slate-400">Exibindo registros</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-white border-collapse border border-slate-800 divide-y divide-slate-800">
+                        <thead class="bg-slate-900 uppercase text-3xs font-semibold text-sky-400">
+                            <tr class="divide-x divide-slate-800">
+                                <th class="py-3 px-3">Matrícula</th>
+                                <th class="py-3 px-3">Nome do Sócio</th>
+                                <th class="py-3 px-3">Categoria</th>
+                                <th id="th-date-label" class="py-3 px-3 text-center">Data de Entrada</th>
+                                <th class="py-3 px-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbl-socios-body" class="divide-y divide-slate-800">
+                            <!-- JS preenche aqui -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
+                    <span class="text-slate-400">Página 1 de 1</span>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1.5 rounded bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed font-bold" disabled>&lt; Anterior</button>
+                        <button class="px-3 py-1.5 rounded bg-slate-800 text-sky-400 border border-slate-700 font-bold hover:bg-slate-700 transition" onclick="alert('Página demonstrativa.')">Próximo &gt;</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-6xl w-full mx-auto mt-auto pt-8 text-center text-xs text-white">
+        Painel Administrativo do Clube &mdash; Sistema de Gestão BI
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        // Dados de Sócios (Com 8 Novos e 3 Cancelados no mês)
+        const sociosData = [
+            // 8 Novos Sócios em Setembro
+            { id: "S-01221", nome: "Ana Paula Mendonça", cat: "Ouro", dataEntrada: "01/09/2026", dataCancelamento: "-", status: "Novo" },
+            { id: "S-01222", nome: "Bruno Castro Silveira", cat: "Prata", dataEntrada: "02/09/2026", dataCancelamento: "-", status: "Novo" },
+            { id: "S-01223", nome: "Carla Beatriz Nunes", cat: "Patrimonial", dataEntrada: "03/09/2026", dataCancelamento: "-", status: "Novo" },
+            { id: "S-01224", nome: "Daniel Oliveira Garcia", cat: "Ouro", dataEntrada: "04/09/2026", dataCancelamento: "-", status: "Novo" },
+            { id: "S-01225", nome: "Helena Martins Rocha", cat: "Ouro", dataEntrada: "05/09/2026", dataCancelamento: "-", status: "Novo" },
+            { id: "S-01227", nome: "Marcelo Taz Andrade", cat: "Patrimonial", dataEntrada: "09/09/2026", dataCancelamento: "-", status: "Novo" },
+            { id: "S-01228", nome: "Renata Vasconcelos Rios", cat: "Patrimonial", dataEntrada: "11/09/2026", dataCancelamento: "-", status: "Novo" },
+            { id: "S-01229", nome: "Thiago Lacerda Mello", cat: "Prata", dataEntrada: "12/09/2026", dataCancelamento: "-", status: "Novo" },
+
+            // Ativos (Amostra de cadastros anteriores)
+            { id: "S-01050", nome: "Eduardo Farias Ribeiro", cat: "Individual", dataEntrada: "12/03/2024", dataCancelamento: "-", status: "Ativo" },
+            { id: "S-01112", nome: "Gabriel Santos Passos", cat: "Prata", dataEntrada: "05/01/2025", dataCancelamento: "-", status: "Ativo" },
+            { id: "S-00742", nome: "Igor Guimarães Rosa", cat: "Patrimonial", dataEntrada: "11/11/2022", dataCancelamento: "-", status: "Ativo" },
+            { id: "S-00988", nome: "Kleber Machado Rios", cat: "Prata", dataEntrada: "20/05/2024", dataCancelamento: "-", status: "Ativo" },
+            { id: "S-00630", nome: "Laura Fonseca Xavier", cat: "Ouro", dataEntrada: "14/02/2021", dataCancelamento: "-", status: "Ativo" },
+            { id: "S-01180", nome: "Otávio Augusto Neves", cat: "Individual", dataEntrada: "15/06/2025", dataCancelamento: "-", status: "Ativo" },
+            { id: "S-00940", nome: "Patricia Abravanel Diniz", cat: "Ouro", dataEntrada: "30/01/2024", dataCancelamento: "-", status: "Ativo" },
+            { id: "S-00810", nome: "Quirino Freitas Leite", cat: "Prata", dataEntrada: "22/10/2023", dataCancelamento: "-", status: "Ativo" },
+
+            // 3 Cancelamentos em Setembro
+            { id: "S-01226", nome: "Juliana Paes Barreto", cat: "Individual", dataEntrada: "10/01/2023", dataCancelamento: "08/09/2026", status: "Cancelado" },
+            { id: "S-00511", nome: "Naira Peixoto Cruz", cat: "Prata", dataEntrada: "09/07/2020", dataCancelamento: "04/09/2026", status: "Cancelado" },
+            { id: "S-00612", nome: "Marcos Vinicius Santos", cat: "Ouro", dataEntrada: "15/11/2021", dataCancelamento: "11/09/2026", status: "Cancelado" }
+        ];
+
+        // DADOS FINANCEIROS EXCLUSIVOS DE SETEMBRO
+        // 1. Pago em Setembro (20 de amostragem)
+        // 1. Pago em Setembro (Amostra de 6 clientes para padronizar com as outras abas)
+const finPago = [
+    { nome: "Ana Paula Mendonça", valor: "R$ 450,00", data: "01/09/2026", meiopag: "Pix", status: "Confirmado" },
+    { nome: "Bruno Castro Silveira", valor: "R$ 350,00", data: "02/09/2026", meiopag: "Cartão", status: "Confirmado" },
+    { nome: "Eduardo Farias Ribeiro", valor: "R$ 450,00", data: "03/09/2026", meiopag: "Pix", status: "Confirmado" },
+    { nome: "Gabriel Santos Passos", valor: "R$ 350,00", data: "04/09/2026", meiopag: "Cartão", status: "Confirmado" },
+    { nome: "Igor Guimarães Rosa", valor: "R$ 600,00", data: "05/09/2026", meiopag: "Pix", status: "Confirmado" },
+    { nome: "Laura Fonseca Xavier", valor: "R$ 450,00", data: "05/09/2026", meiopag: "Boleto", status: "Confirmado" }
+];
+
+        // 2. A Receber em Setembro (A vencer no mês)
+        const finReceber = [
+            { nome: "Claudio Manoel Ferreira", valor: "R$ 450,00", vencimento: "20/09/2026", meiopag: "Boleto", status: "A Vencer" },
+            { nome: "Denise Fraga Pires", valor: "R$ 350,00", vencimento: "22/09/2026", meiopag: "Cartão (Recorrente)", status: "A Vencer" },
+            { nome: "Eliana Michaelichen", valor: "R$ 600,00", vencimento: "25/09/2026", meiopag: "Boleto", status: "A Vencer" },
+            { nome: "Fabio Assunção Cruz", valor: "R$ 450,00", vencimento: "28/09/2026", meiopag: "Boleto", status: "A Vencer" },
+            { nome: "Gisele Bündchen Silva", valor: "R$ 600,00", vencimento: "30/09/2026", meiopag: "Cartão (Recorrente)", status: "A Vencer" }
+        ];
+
+        // 3. Em Atraso em Setembro (12 sócios que venceram até o dia 14/09 e não pagaram)
+        const finAtraso = [
+            { nome: "Carlos Eduardo Silva", valor: "R$ 450,00", vencimento: "05/09/2026", dias: "9 dias", status: "Atrasado" },
+            { nome: "Mariana Costa Ramos", valor: "R$ 450,00", vencimento: "05/09/2026", dias: "9 dias", status: "Atrasado" },
+            { nome: "Roberto Almeida Junqueira", valor: "R$ 450,00", vencimento: "10/09/2026", dias: "4 dias", status: "Atrasado" },
+            { nome: "Fernanda Lima Souza", valor: "R$ 450,00", vencimento: "10/09/2026", dias: "4 dias", status: "Atrasado" },
+            { nome: "Gustavo Lima Soares", valor: "R$ 450,00", vencimento: "10/09/2026", dias: "4 dias", status: "Atrasado" },
+            { nome: "Hélio dos Anjos Prado", valor: "R$ 450,00", vencimento: "12/09/2026", dias: "2 dias", status: "Atrasado" }
+        ];
+
+        // LÓGICA DE ALTERNÂNCIA DA TABELA FINANCEIRA
+        function switchFinSubTab(sub) {
+            const btnPago = document.getElementById('subtab-pago');
+            const btnReceber = document.getElementById('subtab-receber');
+            const btnAtraso = document.getElementById('subtab-atraso');
+
+            btnPago.className = "sub-tab-btn inactive px-3 py-1 text-xs rounded-md";
+            btnReceber.className = "sub-tab-btn inactive px-3 py-1 text-xs rounded-md";
+            btnAtraso.className = "sub-tab-btn inactive px-3 py-1 text-xs rounded-md";
+
+            const head = document.getElementById('fin-table-head');
+            const body = document.getElementById('fin-table-body');
+            const pageInfo = document.getElementById('fin-page-info');
+
+            body.innerHTML = '';
+
+            if (sub === 'pago') {
+                btnPago.className = "sub-tab-btn active px-3 py-1 text-xs rounded-md";
+                head.innerHTML = `
+                    <th class="py-3 px-3">Nome do Sócio</th>
+                    <th class="py-3 px-3 text-right">Valor Pago</th>
+                    <th class="py-3 px-3 text-center">Data Pagamento</th>
+                    <th class="py-3 px-3">Forma</th>
+                    <th class="py-3 px-3 text-center">Status</th>
+                `;
+                finPago.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/50 divide-x divide-slate-800';
+                    tr.innerHTML = `
+                        <td class="py-3 px-3 font-semibold text-white">${item.nome}</td>
+                        <td class="py-3 px-3 text-right font-extrabold text-emerald-400">${item.valor}</td>
+                        <td class="py-3 px-3 text-center text-slate-300 font-mono">${item.data}</td>
+                        <td class="py-3 px-3 text-slate-300">${item.meiopag}</td>
+                        <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded text-3xs font-bold border bg-emerald-500/20 text-emerald-400 border-emerald-500/40">${item.status}</span></td>
+                    `;
+                    body.appendChild(tr);
+                });
+                pageInfo.innerText = "Exibindo 20 de ~380 recebimentos (Página 1 de 19)";
+            } 
+            else if (sub === 'receber') {
+                btnReceber.className = "sub-tab-btn active px-3 py-1 text-xs rounded-md";
+                head.innerHTML = `
+                    <th class="py-3 px-3">Nome do Sócio</th>
+                    <th class="py-3 px-3 text-right">Valor Previsto</th>
+                    <th class="py-3 px-3 text-center">Vencimento</th>
+                    <th class="py-3 px-3">Forma Prevista</th>
+                    <th class="py-3 px-3 text-center">Status</th>
+                `;
+                finReceber.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/50 divide-x divide-slate-800';
+                    tr.innerHTML = `
+                        <td class="py-3 px-3 font-semibold text-white">${item.nome}</td>
+                        <td class="py-3 px-3 text-right font-extrabold text-amber-400">${item.valor}</td>
+                        <td class="py-3 px-3 text-center text-slate-300 font-mono">${item.vencimento}</td>
+                        <td class="py-3 px-3 text-slate-300">${item.meiopag}</td>
+                        <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded text-3xs font-bold border bg-amber-500/20 text-amber-400 border-amber-500/40">${item.status}</span></td>
+                    `;
+                    body.appendChild(tr);
+                });
+                pageInfo.innerText = "Exibindo 5 de ~85 lançamentos previstos (Página 1 de 17)";
+            } 
+            else if (sub === 'atraso') {
+                btnAtraso.className = "sub-tab-btn active px-3 py-1 text-xs rounded-md";
+                head.innerHTML = `
+                    <th class="py-3 px-3">Nome do Sócio</th>
+                    <th class="py-3 px-3 text-right">Valor em Atraso</th>
+                    <th class="py-3 px-3 text-center">Venceu Em</th>
+                    <th class="py-3 px-3 text-center">Atraso</th>
+                    <th class="py-3 px-3 text-center">Status</th>
+                `;
+                finAtraso.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/50 divide-x divide-slate-800';
+                    tr.innerHTML = `
+                        <td class="py-3 px-3 font-semibold text-white">${item.nome}</td>
+                        <td class="py-3 px-3 text-right font-extrabold text-rose-400">${item.valor}</td>
+                        <td class="py-3 px-3 text-center text-slate-300 font-mono">${item.vencimento}</td>
+                        <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold border border-rose-500/40">${item.dias}</span></td>
+                        <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded text-3xs font-bold border bg-rose-500/20 text-rose-400 border-rose-500/40">${item.status}</span></td>
+                    `;
+                    body.appendChild(tr);
+                });
+                pageInfo.innerText = "Exibindo 6 de 12 sócios inadimplentes em Setembro (Página 1 de 2)";
+            }
+        }
+
+        // TABELA DE SÓCIOS
+        function renderSociosTable(list, currentStatus) {
+            const tbody = document.getElementById('tbl-socios-body');
+            const thDate = document.getElementById('th-date-label');
+            const countLabel = document.getElementById('socios-count-label');
+            const subtitleDesc = document.getElementById('socios-subtitle-desc');
+
+            tbody.innerHTML = '';
+
+            if (currentStatus === 'Cancelado') {
+                thDate.innerText = 'Data de Cancelamento';
+                subtitleDesc.innerText = 'Exibindo sócios que cancelaram em Setembro';
+            } else if (currentStatus === 'Novo') {
+                thDate.innerText = 'Adesão em Setembro';
+                subtitleDesc.innerText = 'Exibindo novas adesões de Setembro';
+            } else if (currentStatus === 'Ativo') {
+                thDate.innerText = 'Data de Entrada';
+                subtitleDesc.innerText = 'Exibindo sócios ativos do clube';
+            } else {
+                thDate.innerText = 'Data de Entrada / Saída';
+                subtitleDesc.innerText = 'Exibindo panorama completo de cadastros';
+            }
+
+            countLabel.innerText = `Exibindo ${list.length} registros`;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Nenhum sócio encontrado.</td></tr>`;
+                return;
+            }
+
+            list.forEach(s => {
+                let badgeClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+                if(s.status === 'Cancelado') badgeClass = 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+                if(s.status === 'Novo') badgeClass = 'bg-sky-500/20 text-sky-400 border-sky-500/40';
+
+                const displayDate = (s.status === 'Cancelado') ? s.dataCancelamento : s.dataEntrada;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/50 divide-x divide-slate-800';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-mono text-slate-300">${s.id}</td>
+                    <td class="py-3 px-3 font-semibold text-white">${s.nome}</td>
+                    <td class="py-3 px-3 text-slate-300">${s.cat}</td>
+                    <td class="py-3 px-3 text-center font-mono text-slate-300">${displayDate}</td>
+                    <td class="py-3 px-3 text-center"><span class="px-2 py-0.5 rounded text-3xs font-bold border ${badgeClass}">${s.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyFilters() {
+            const searchValue = document.getElementById('search-nome').value.toLowerCase();
+            const statusValue = document.getElementById('filter-status').value;
+
+            const filtered = sociosData.filter(s => {
+                const matchesName = s.nome.toLowerCase().includes(searchValue) || s.id.toLowerCase().includes(searchValue);
+                const matchesStatus = (statusValue === 'todos') || (s.status === statusValue);
+                return matchesName && matchesStatus;
+            });
+
+            renderSociosTable(filtered, statusValue);
+        }
+
+        function switchTab(tab, extraParam = 'todos') {
+            document.getElementById('page-geral').classList.add('hidden');
+            document.getElementById('page-financeiro').classList.add('hidden');
+            document.getElementById('page-ocupacao').classList.add('hidden');
+            document.getElementById('page-socios').classList.add('hidden');
+
+            const buttons = ['geral', 'financeiro', 'ocupacao', 'socios'];
+            buttons.forEach(b => {
+                const btn = document.getElementById(`btn-${b}`);
+                if(btn) {
+                    btn.classList.remove('active');
+                    btn.classList.add('inactive');
+                }
+            });
+
+            document.getElementById(`page-${tab}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-${tab}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('inactive');
+                activeBtn.classList.add('active');
+            }
+
+            if (tab === 'socios') {
+                document.getElementById('filter-status').value = extraParam;
+                document.getElementById('search-nome').value = '';
+                applyFilters();
+            }
+
+            if (tab === 'financeiro') {
+                const finSub = (extraParam === 'atraso' || extraParam === 'receber') ? extraParam : 'pago';
+                switchFinSubTab(finSub);
+            }
+        }
+
+        Chart.defaults.color = '#ffffff';
+        Chart.defaults.borderColor = '#1e2d42';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            applyFilters();
+            switchFinSubTab('pago');
+
+            // Gráfico 1: Evolução da Receita
+            const ctxEvolucao = document.getElementById('chartEvolucaoReceita').getContext('2d');
+            new Chart(ctxEvolucao, {
+                type: 'line',
+                data: {
+                    labels: ['Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro'],
+                    datasets: [{
+                        label: 'Receita (R$)',
+                        data: [110000, 125000, 118000, 135000, 130000, 142850],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Gráfico 2: Formas de Pagamento
+            const ctxPagamento = document.getElementById('chartFormaPagamento').getContext('2d');
+            new Chart(ctxPagamento, {
+                type: 'bar',
+                data: {
+                    labels: ['Pix', 'Cartão', 'Boleto'],
+                    datasets: [{
+                        label: 'Valor (R$)',
+                        data: [82000, 45000, 15850],
+                        backgroundColor: ['#10b981', '#38bdf8', '#f59e0b'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Gráfico 3: Reservas por Espaço
+            const ctxReservas = document.getElementById('chartReservasEspaco').getContext('2d');
+            new Chart(ctxReservas, {
+                type: 'bar',
+                data: {
+                    labels: ['Quadra 1', 'Quadra 2', 'Salão', 'Piscina'],
+                    datasets: [{
+                        label: 'Reservas',
+                        data: [52, 41, 28, 27],
+                        backgroundColor: '#38bdf8',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
